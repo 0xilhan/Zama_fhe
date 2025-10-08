@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zama FHE Flashcards</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React and Babel for running JSX in the browser -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Tone.js for sound effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.min.js"></script>
+    <style>
+        /* Custom styles for the card flip animation */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .card-container {
+            perspective: 1200px;
+        }
+        .card {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .card.is-flipped {
+            transform: rotateY(180deg);
+        }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden; /* For Safari */
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+        }
+        
+        /* Added animations */
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .animate-scaleIn {
+            animation: scaleIn 0.4s ease-out forwards;
+        }
+        
+        @keyframes slideUpFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Staggered animations for completion screen */
+        .animate-slideUpFadeIn {
+            opacity: 0; /* Start hidden */
+            animation: slideUpFadeIn 0.5s ease-out forwards;
+        }
+        .completion-cert { animation-delay: 0.1s; }
+        .completion-buttons { animation-delay: 0.3s; }
+        
+        /* Certificate Styles */
+        .certificate {
+            background: #ffffff;
+            padding: 2rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            border: 1px solid #e5e7eb;
+        }
+        .certificate-border {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            right: 12px;
+            bottom: 12px;
+            border: 4px double #d1d5db;
+            content: '';
+        }
+
+        .certificate-title {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            font-size: 2.75rem;
+            color: #111827;
+            font-weight: bold;
+        }
+        .certificate-recipient {
+            font-family: 'Cursive', 'Brush Script MT', 'Brush Script Std';
+            font-size: 3rem;
+            color: #111827;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body class="bg-[#FFD600]">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        
+        const ZAMA_LOGO_SVG = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+            <svg xmlns="http://www.w3.org/2000/svg" width="200" height="50" viewBox="0 0 200 50">
+              <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="'Inter', sans-serif" font-size="40" font-weight="bold" fill="#000">ZAMA</text>
+            </svg>
+        `);
+        
+        const CERTIFICATE_SEAL_SVG =
+          'data:image/svg+xml;utf8,' +
+          encodeURIComponent(`
+          <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+            <g>
+              <circle cx="100" cy="100" r="90" fill="#111827" />
+              <path d="M65 105 L90 130 L145 75" stroke="#10B981" stroke-width="15" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+            </g>
+          </svg>
+        `);
+        
+        const INITIAL_CARDS = [
+          { term: 'FHE (Fully Homomorphic Encryption)', desc: 'Encryption that allows computation on ciphertexts without decrypting data.' },
+          { term: 'Bootstrapping', desc: 'Refreshes ciphertext to remove noise and maintain correctness during extended computation.' },
+          { term: 'Lattice Cryptography', desc: 'Mathematical foundation used in FHE and post-quantum cryptography for secure encryption.' },
+          { term: 'ZK-SNARKs', desc: 'Zero-Knowledge proofs that verify computation correctness without revealing inputs.' },
+          { term: 'ZK-STARKs', desc: 'Scalable transparent proofs that avoid trusted setup and offer post-quantum security.' },
+          { term: 'TFHE', desc: 'A fast FHE scheme optimized for boolean circuits and low-latency operations.' },
+          { term: 'CKKS Scheme', desc: 'FHE scheme designed for approximate arithmetic on encrypted real numbers (useful for ML).' },
+          { term: 'Homomorphic Multiplication', desc: 'Multiplying ciphertexts which corresponds to multiplication on plaintexts after decryption.' },
+          { term: 'Noise Budget', desc: 'How many operations a ciphertext can undergo before needing a refresh (bootstrapping).' },
+          { term: 'Trusted Execution Environment (TEE)', desc: 'Hardware-isolated area for secure computation and key management.' },
+          { term: 'Multi-Party Computation (MPC)', desc: 'Multiple parties jointly compute a function without revealing their private inputs.' },
+          { term: 'MEV (Maximal Extractable Value)', desc: 'Value extracted by validators/miners through ordering or censoring transactions.' },
+          { term: 'Zama Concrete', desc: 'Zama’s open-source library and toolkit for working with FHE in applications.' },
+          { term: 'FHE HPU', desc: 'Homomorphic Processing Unit — specialized hardware for accelerating FHE workloads.' },
+          { term: 'Privacy by Default', desc: 'Design principle: privacy is the baseline, not an optional feature.' }
+        ];
+
+        function App() {
+          const [flashcards] = useState(INITIAL_CARDS);
+          const [current, setCurrent] = useState(0);
+          const [flipped, setFlipped] = useState(false);
+          const [completed, setCompleted] = useState(false);
+          const cardContainerRef = useRef(null);
+
+          // SFX Synths
+          const clickSynth = useRef(null);
+          const flipSynth = useRef(null);
+          const isSoundInitialized = useRef(false);
+          
+          function playSound(type) {
+            if (!window.Tone) {
+              console.error("Tone.js is not loaded yet.");
+              return;
+            }
+            
+            if (!isSoundInitialized.current) {
+                Tone.start(); 
+                clickSynth.current = new Tone.MembraneSynth().toDestination();
+                flipSynth.current = new Tone.NoiseSynth({
+                    noise: { type: 'white' },
+                    envelope: { attack: 0.001, decay: 0.1, sustain: 0 }
+                }).toDestination();
+                isSoundInitialized.current = true;
+            }
+            
+            if (type === 'flip' && flipSynth.current) {
+                flipSynth.current.triggerAttackRelease('16n');
+            } else if (type === 'click' && clickSynth.current) {
+                clickSynth.current.triggerAttackRelease('C2', '8n');
+            }
+          }
+
+          const card = flashcards[current];
+          
+          useEffect(() => {
+              if (cardContainerRef.current) {
+                  const el = cardContainerRef.current;
+                  el.classList.remove('animate-scaleIn');
+                  void el.offsetWidth; 
+                  el.classList.add('animate-scaleIn');
+              }
+          }, [current]);
+
+          const handleCardFlip = () => {
+            playSound('flip');
+            setFlipped(f => !f);
+          };
+
+          function handleNext() {
+            playSound('click');
+            if (current + 1 < flashcards.length) {
+              setCurrent(c => c + 1);
+              setFlipped(false);
+            } else {
+              setCompleted(true);
+            }
+          }
+
+          function handlePrev() {
+            playSound('click');
+            if (current > 0) {
+              setCurrent(c => c - 1);
+              setFlipped(false);
+            }
+          }
+          
+          function handleReveal() {
+              playSound('click');
+              setFlipped(true);
+          }
+          
+          function handleRestart() {
+              playSound('click');
+              setCompleted(false);
+              setCurrent(0);
+              setFlipped(false);
+          }
+          
+          const tweetText = encodeURIComponent(
+            `Just completed the Zama FHE Flashcards and earned my certificate! Learned a ton about privacy tech & crypto computation. After this session, @Zun2025's article is way easier to understand. Big thanks to @cryptoalchemy29 for this awesome learning tool! 🔗 https://zama-fhe-flashcards.vercel.app`
+          );
+
+          if (completed) {
+            return (
+              <div className="flex flex-col items-center justify-center min-h-screen p-4 md:p-6 bg-[#FFD600] text-black">
+                <div className="certificate rounded-lg animate-slideUpFadeIn completion-cert">
+                    <div className="certificate-border"></div>
+                    <div className="relative z-10 p-6">
+                        <img src={ZAMA_LOGO_SVG} alt="Zama Logo" className="h-10 mx-auto mb-8"/>
+                        <p className="text-xl text-gray-500 mb-4 tracking-widest">CERTIFICATE OF COMPLETION</p>
+                        <h1 className="certificate-title mb-6">FHE Flashcards Course</h1>
+                        <p className="text-lg text-gray-600 mb-4">Proudly presented to</p>
+                        <p className="certificate-recipient inline-block px-8 w-full border-b-2 border-gray-300 pb-2 mb-8">A Dedicated Learner</p>
+                        <p className="text-md text-gray-600 max-w-xl mx-auto">for successfully completing the Zama FHE Flashcards course, demonstrating foundational knowledge in Fully Homomorphic Encryption and ZK cryptography.</p>
+                        <div className="flex justify-between items-end w-full mt-12 pt-6">
+                            <div className="text-center">
+                                <p className="text-gray-700 font-semibold border-b-2 border-gray-400 pb-1">Crypto Alchemy</p>
+                                <p className="text-sm text-gray-500">Created By</p>
+                            </div>
+                            <img src={CERTIFICATE_SEAL_SVG} alt="Completion Seal" className="w-28 h-28"/>
+                            <div className="text-center">
+                                <p className="text-gray-700 font-semibold border-b-2 border-gray-400 pb-1">{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                <p className="text-sm text-gray-500">Date of Completion</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="mt-8 flex items-center justify-center gap-4 animate-slideUpFadeIn completion-buttons">
+                    <a
+                      href={`https://twitter.com/intent/tweet?text=${tweetText}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => playSound('click')}
+                      className="bg-black text-white px-6 py-3 rounded-lg hover:opacity-95 transition-transform duration-200 hover:scale-105 active:scale-95"
+                    >
+                      Share on X
+                    </a>
+                    <button
+                      onClick={handleRestart}
+                      className="px-6 py-3 bg-white text-black rounded-lg border border-black transition-transform duration-200 hover:scale-105 active:scale-95"
+                    >
+                      Restart
+                    </button>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-[#FFD600] text-black">
+              <div className="max-w-3xl w-full text-left">
+                <header className="mb-6 flex items-center justify-between">
+                  <h1 className="text-3xl font-extrabold">Zama FHE Flashcards</h1>
+                  <div className="text-sm text-black/70">{current + 1}/{flashcards.length}</div>
+                </header>
+                <main>
+                  <div
+                      ref={cardContainerRef}
+                      className="w-full h-56 sm:w-3/4 mx-auto cursor-pointer card-container"
+                      onClick={handleCardFlip}
+                  >
+                      <div className={`card ${flipped ? 'is-flipped' : ''}`}>
+                          <div className="card-face bg-black text-white rounded-2xl p-8 shadow-2xl">
+                               <div className="text-2xl font-semibold leading-tight">{card.term}</div>
+                          </div>
+                          <div className="card-face card-back bg-black text-white rounded-2xl p-8 shadow-2xl">
+                              <div className="text-xl font-semibold leading-tight">{card.desc}</div>
+                          </div>
+                      </div>
+                  </div>
+
+                  <div className="mt-6 flex gap-4">
+                    <button
+                      onClick={handlePrev}
+                      disabled={current === 0}
+                      className={`px-4 py-2 rounded-lg transition-all duration-200 ${current === 0 ? 'bg-black/20 text-black/50 cursor-not-allowed' : 'bg-black text-white hover:scale-105 active:scale-95'}`}
+                    >
+                      Prev
+                    </button>
+                    <button
+                      onClick={handleNext}
+                      className="px-6 py-2 rounded-lg bg-black text-white transition-transform duration-200 hover:scale-105 active:scale-95"
+                    >
+                      {current + 1 === flashcards.length ? 'Finish' : 'Next'}
+                    </button>
+                    <button
+                      onClick={handleReveal}
+                      className="ml-auto px-4 py-2 rounded-lg bg-white text-black border border-black transition-transform duration-200 hover:scale-105 active:scale-95"
+                    >
+                      Reveal
+                    </button>
+                  </div>
+                </main>
+                <footer className="mt-8 text-sm text-black/70">https://docs.zama.ai/tfhe-rs</footer>
+              </div>
+            </div>
+          );
+        }
+
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<App />);
+    </script>
+</body>
+</html>
+

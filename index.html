@@ -126,21 +126,21 @@
         `);
         
         const INITIAL_CARDS = [
-          { term: 'FHE (Fully Homomorphic Encryption)', desc: 'Encryption that allows computation on ciphertexts without decrypting data.' },
-          { term: 'Bootstrapping', desc: 'Refreshes ciphertext to remove noise and maintain correctness during extended computation.' },
-          { term: 'Lattice Cryptography', desc: 'Mathematical foundation used in FHE and post-quantum cryptography for secure encryption.' },
+          { term: 'FHE (Fully Homomorphic Encryption)', desc: 'Encryption that lets you perform computations on ciphertexts without decrypting data, producing encrypted results that match operations done on plaintext.' },
+          { term: 'Ciphertext', desc: 'The encrypted version of data.' },
+          { term: 'Plaintext', desc: 'The original readable data before encryption.' },
+          { term: 'Lattice Cryptography', desc: 'A mathematical structure forming the basis of FHE and post-quantum cryptography, offering security against quantum attacks.' },
           { term: 'ZK-SNARKs', desc: 'Zero-Knowledge proofs that verify computation correctness without revealing inputs.' },
           { term: 'ZK-STARKs', desc: 'Scalable transparent proofs that avoid trusted setup and offer post-quantum security.' },
           { term: 'TFHE', desc: 'A fast FHE scheme optimized for boolean circuits and low-latency operations.' },
-          { term: 'CKKS Scheme', desc: 'FHE scheme designed for approximate arithmetic on encrypted real numbers (useful for ML).' },
-          { term: 'Homomorphic Multiplication', desc: 'Multiplying ciphertexts which corresponds to multiplication on plaintexts after decryption.' },
-          { term: 'Noise Budget', desc: 'How many operations a ciphertext can undergo before needing a refresh (bootstrapping).' },
+          { term: 'Bootstrapping', desc: 'A process in FHE that reduces noise or random errors in ciphertexts to allow unlimited computations.' },
+          { term: 'Programmable Bootstrapping', desc: 'An advanced FHE technique developed by Zama that allows performing arbitrary functions during bootstrapping, enabling practical encrypted computations.' },
+          { term: 'Homomorphic Multiplication', desc: 'Multiplying ciphertexts, which corresponds to multiplication on plaintexts after decryption.' },
           { term: 'Trusted Execution Environment (TEE)', desc: 'Hardware-isolated area for secure computation and key management.' },
-          { term: 'Multi-Party Computation (MPC)', desc: 'Multiple parties jointly compute a function without revealing their private inputs.' },
-          { term: 'MEV (Maximal Extractable Value)', desc: 'Value extracted by validators/miners through ordering or censoring transactions.' },
+          { term: 'Homomorphic Processing Unit (HPU)', desc: 'Specialized hardware that accelerates encrypted computation, like what Zama is developing.' },
           { term: 'Zama Concrete', desc: 'Zama’s open-source library and toolkit for working with FHE in applications.' },
-          { term: 'FHE HPU', desc: 'Homomorphic Processing Unit — specialized hardware for accelerating FHE workloads.' },
-          { term: 'Privacy by Default', desc: 'Design principle: privacy is the baseline, not an optional feature.' }
+          { term: 'Rand Hindi', desc: 'Co-founder & CEO of Zama. A serial entrepreneur who started coding at 10, founded his first company at 14, and later built Snips — an AI voice assistant startup acquired by Sonos. He holds a PhD in Bioinformatics from UCL and now leads Zama to make privacy-preserving FHE tech practical for everyone.' },
+          { term: 'Pascal Paillier', desc: 'Co-founder & CTO of Zama. A world-renowned cryptographer best known for inventing the Paillier Cryptosystem, one of the most famous homomorphic encryption schemes. With over 25 years in cryptography, numerous patents, and award-winning research, he’s shaping the future of encrypted computation at Zama.' }
         ];
 
         function App() {

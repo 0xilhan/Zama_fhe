@@ -12,6 +12,8 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <!-- Tone.js for sound effects -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.min.js"></script>
+    <!-- html2canvas for downloading the certificate -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         /* Custom styles for the card flip animation */
         body {
@@ -100,6 +102,45 @@
             color: #111827;
             font-weight: 500;
         }
+        
+        /* Follow Button Animation */
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7);
+            }
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+            }
+        }
+        .follow-button {
+            animation: pulse 2s infinite;
+        }
+        
+        /* Confetti Animation */
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 9999;
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 20px;
+            background: #f00;
+            opacity: 0;
+            animation: confetti-fall 4s ease-out infinite;
+        }
+        @keyframes confetti-fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+        }
     </style>
 </head>
 <body class="bg-[#FFD600]">
@@ -107,13 +148,13 @@
 
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
-        
-        const ZAMA_LOGO_SVG = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
-            <svg xmlns="http://www.w3.org/2000/svg" width="200" height="50" viewBox="0 0 200 50">
-              <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="'Inter', sans-serif" font-size="40" font-weight="bold" fill="#000">ZAMA</text>
+
+        const X_LOGO_SVG = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 6 6 18"></path><path d="m6 6 12 12"></path>
             </svg>
         `);
-        
+
         const CERTIFICATE_SEAL_SVG =
           'data:image/svg+xml;utf8,' +
           encodeURIComponent(`
@@ -143,12 +184,40 @@
           { term: 'Pascal Paillier', desc: 'Co-founder & CTO of Zama. A world-renowned cryptographer best known for inventing the Paillier Cryptosystem, one of the most famous homomorphic encryption schemes. With over 25 years in cryptography, numerous patents, and award-winning research, he’s shaping the future of encrypted computation at Zama.' }
         ];
 
+        function ConfettiCelebration() {
+            const confettiCount = 100;
+            const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107', '#ff9800', '#ff5722'];
+
+            return (
+                <div className="flex flex-col items-center justify-center min-h-screen bg-[#FFD600] text-black">
+                    <h1 className="text-6xl font-extrabold animate-scaleIn">Congratulations!</h1>
+                    <div className="confetti-container">
+                        {Array.from({ length: confettiCount }).map((_, i) => (
+                            <div
+                                key={i}
+                                className="confetti"
+                                style={{
+                                    left: `${Math.random() * 100}vw`,
+                                    animationDelay: `${Math.random() * 4}s`,
+                                    backgroundColor: colors[Math.floor(Math.random() * colors.length)],
+                                    transform: `rotate(${Math.random() * 360}deg)`
+                                }}
+                            ></div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
         function App() {
           const [flashcards] = useState(INITIAL_CARDS);
           const [current, setCurrent] = useState(0);
           const [flipped, setFlipped] = useState(false);
+          const [showCelebration, setShowCelebration] = useState(false);
           const [completed, setCompleted] = useState(false);
+          
           const cardContainerRef = useRef(null);
+          const certificateRef = useRef(null);
 
           // SFX Synths
           const clickSynth = useRef(null);
@@ -189,6 +258,16 @@
               }
           }, [current]);
 
+          useEffect(() => {
+              if (showCelebration) {
+                  const timer = setTimeout(() => {
+                      setShowCelebration(false);
+                      setCompleted(true);
+                  }, 3000); // 3-second celebration
+                  return () => clearTimeout(timer);
+              }
+          }, [showCelebration]);
+
           const handleCardFlip = () => {
             playSound('flip');
             setFlipped(f => !f);
@@ -200,7 +279,7 @@
               setCurrent(c => c + 1);
               setFlipped(false);
             } else {
-              setCompleted(true);
+              setShowCelebration(true);
             }
           }
 
@@ -224,17 +303,56 @@
               setFlipped(false);
           }
           
+          function handleDownload() {
+              playSound('click');
+              const certificateElement = certificateRef.current;
+              if (certificateElement && window.html2canvas) {
+                  // Temporarily remove animation classes to ensure the element is fully visible before capture
+                  const animationClass = 'animate-slideUpFadeIn';
+                  const completionClass = 'completion-cert';
+                  certificateElement.classList.remove(animationClass, completionClass);
+
+                  html2canvas(certificateElement, {
+                      scale: 2, // Higher scale for better quality
+                      backgroundColor: "#ffffff", // Explicitly set background to white for the PNG
+                  }).then(canvas => {
+                      const link = document.createElement('a');
+                      link.download = 'Zama-FHE-Certificate.png';
+                      link.href = canvas.toDataURL('image/png');
+                      link.click();
+                      // Add the animation classes back after the capture is done
+                      certificateElement.classList.add(animationClass, completionClass);
+                  }).catch(err => {
+                      console.error("Failed to download certificate:", err);
+                      // Add classes back even if there is an error
+                      certificateElement.classList.add(animationClass, completionClass);
+                  });
+              }
+          }
+          
           const tweetText = encodeURIComponent(
-            `Just completed the Zama FHE Flashcards and earned my certificate! Learned a ton about privacy tech & crypto computation. After this session, @Zun2025's article is way easier to understand. Big thanks to @cryptoalchemy29 for this awesome learning tool! 🔗 https://zamaflashcards.vercel.app/`
+            `Just completed the Zama FHE Flashcards and earned my certificate! Learned a ton about privacy tech & crypto computation. After this session, @Zun2025's article is way easier to understand. Big thanks to @cryptoalchemy29 for this awesome learning tool! 🔗 https://zama-fhe-flashcards.vercel.app`
           );
+
+          if (showCelebration) {
+            return <ConfettiCelebration />;
+          }
 
           if (completed) {
             return (
               <div className="flex flex-col items-center justify-center min-h-screen p-4 md:p-6 bg-[#FFD600] text-black">
-                <div className="certificate rounded-lg animate-slideUpFadeIn completion-cert">
+                <a
+                    href="https://x.com/cryptoalchemy29"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="follow-button fixed bottom-6 right-6 md:bottom-8 md-right-8 z-20 bg-black text-white rounded-full p-3 shadow-lg flex items-center gap-2 hover:scale-110 transition-transform"
+                >
+                    <img src={X_LOGO_SVG} alt="X Logo" className="w-6 h-6" />
+                    <span className="hidden sm:block font-semibold pr-2">Follow</span>
+                </a>
+                <div ref={certificateRef} className="certificate rounded-lg animate-slideUpFadeIn completion-cert">
                     <div className="certificate-border"></div>
-                    <div className="relative z-10 p-6">
-                        <img src={ZAMA_LOGO_SVG} alt="Zama Logo" className="h-10 mx-auto mb-8"/>
+                    <div className="relative z-10 p-6 pt-12">
                         <p className="text-xl text-gray-500 mb-4 tracking-widest">CERTIFICATE OF COMPLETION</p>
                         <h1 className="certificate-title mb-6">FHE Flashcards Course</h1>
                         <p className="text-lg text-gray-600 mb-4">Proudly presented to</p>
@@ -264,6 +382,12 @@
                       Share on X
                     </a>
                     <button
+                      onClick={handleDownload}
+                      className="px-6 py-3 bg-white text-black rounded-lg border border-black transition-transform duration-200 hover:scale-105 active:scale-95"
+                    >
+                      Download
+                    </button>
+                    <button
                       onClick={handleRestart}
                       className="px-6 py-3 bg-white text-black rounded-lg border border-black transition-transform duration-200 hover:scale-105 active:scale-95"
                     >
@@ -276,6 +400,15 @@
 
           return (
             <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-[#FFD600] text-black">
+              <a
+                  href="https://x.com/cryptoalchemy29"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="follow-button fixed bottom-6 right-6 md:bottom-8 md:right-8 z-20 bg-black text-white rounded-full p-3 shadow-lg flex items-center gap-2 hover:scale-110 transition-transform"
+              >
+                  <img src={X_LOGO_SVG} alt="X Logo" className="w-6 h-6" />
+                  <span className="hidden sm:block font-semibold pr-2">Follow</span>
+              </a>
               <div className="max-w-3xl w-full text-left">
                 <header className="mb-6 flex items-center justify-between">
                   <h1 className="text-3xl font-extrabold">Zama FHE Flashcards</h1>

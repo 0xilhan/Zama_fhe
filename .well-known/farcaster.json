@@ -1,0 +1,25 @@
+{
+  "accountAssociation": {
+    "header": "YOUR_SIGNED_HEADER_HERE",
+    "payload": "YOUR_SIGNED_PAYLOAD_HERE",
+    "signature": "YOUR_SIGNATURE_HERE"
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "Zama FHE Flashcards",
+    "iconUrl": "https://raw.githubusercontent.com/0xilhan/Zama_fhe/00650725ab60a6c4458306a727266cd2c60a71bb/ywoKR9uZ_400x400.jpg",
+    "homeUrl": "https://zamaflashcards.vercel.app",
+    "imageUrl": "https://zamaflashcards.vercel.app/og-image.png",
+    "buttonTitle": "📚 Learn FHE",
+    "splashImageUrl": "https://raw.githubusercontent.com/0xilhan/Zama_fhe/00650725ab60a6c4458306a727266cd2c60a71bb/ywoKR9uZ_400x400.jpg",
+    "splashBackgroundColor": "#FFD600",
+    "description": "Interactive flashcards to learn Fully Homomorphic Encryption and ZK cryptography concepts from Zama",
+    "subtitle": "Learn FHE & ZK Cryptography",
+    "screenshotUrls": [
+      "https://zamaflashcards.vercel.app/screenshot1.png",
+      "https://zamaflashcards.vercel.app/screenshot2.png"
+    ],
+    "primaryCategory": "education",
+    "tags": ["crypto", "education", "privacy", "zk", "fhe"]
+  }
+}

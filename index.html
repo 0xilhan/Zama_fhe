@@ -4,21 +4,51 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Zama FHE Flashcards</title>
+    
+    <!-- Farcaster Mini App Meta Tags -->
+    <meta property="og:title" content="Zama FHE Flashcards" />
+    <meta property="og:description" content="Learn Fully Homomorphic Encryption and ZK cryptography with interactive flashcards" />
+    <meta property="og:image" content="https://zamaflashcards.vercel.app/og-image.png" />
+    <meta name="fc:miniapp" content='{"version":"1","imageUrl":"https://zamaflashcards.vercel.app/og-image.png","button":{"title":"📚 Learn FHE","action":{"type":"launch_frame","name":"Zama FHE Flashcards","url":"https://zamaflashcards.vercel.app","splashImageUrl":"https://raw.githubusercontent.com/0xilhan/Zama_fhe/00650725ab60a6c4458306a727266cd2c60a71bb/ywoKR9uZ_400x400.jpg","splashBackgroundColor":"#FFD600"}}}' />
+    <meta name="fc:frame" content='{"version":"1","imageUrl":"https://zamaflashcards.vercel.app/og-image.png","button":{"title":"📚 Learn FHE","action":{"type":"launch_frame","name":"Zama FHE Flashcards","url":"https://zamaflashcards.vercel.app","splashImageUrl":"https://raw.githubusercontent.com/0xilhan/Zama_fhe/00650725ab60a6c4458306a727266cd2c60a71bb/ywoKR9uZ_400x400.jpg","splashBackgroundColor":"#FFD600"}}}' />
+
     <!-- Google Fonts for professional certificate text -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+    
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <!-- React and Babel for running JSX in the browser -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Farcaster Mini App SDK -->
+    <script type="module">
+        import { sdk } from 'https://esm.sh/@farcaster/miniapp-sdk';
+        window.farcasterSDK = sdk;
+        
+        // Initialize SDK and hide splash screen when app is ready
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await sdk.actions.ready();
+                console.log('Farcaster Mini App initialized');
+            } catch (error) {
+                console.log('Running outside Farcaster environment');
+            }
+        });
+    </script>
+    
     <!-- Tone.js for sound effects -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.min.js"></script>
+    
     <!-- html2canvas for downloading the certificate -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
     <style>
+        /* Your existing CSS styles remain exactly the same */
         /* Custom styles for the card flip animation */
         body {
             font-family: 'Inter', sans-serif;
@@ -101,8 +131,8 @@
             font-weight: bold;
         }
         .certificate-recipient {
-            font-family: 'Great Vibes', cursive; /* FIX: Use a specific web font */
-            font-size: 3.5rem; /* Adjusted for the new font */
+            font-family: 'Great Vibes', cursive;
+            font-size: 3.5rem;
             color: #111827;
             font-weight: 500;
         }
@@ -151,6 +181,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
+        // Your existing React app code remains exactly the same
         const { useState, useEffect, useRef } = React;
 
         const X_LOGO_SVG = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
@@ -183,9 +214,9 @@
           { term: 'Homomorphic Multiplication', desc: 'Multiplying ciphertexts, which corresponds to multiplication on plaintexts after decryption.' },
           { term: 'Trusted Execution Environment (TEE)', desc: 'Hardware-isolated area for secure computation and key management.' },
           { term: 'Homomorphic Processing Unit (HPU)', desc: 'Specialized hardware that accelerates encrypted computation, like what Zama is developing.' },
-          { term: 'Zama Concrete', desc: 'Zama’s open-source library and toolkit for working with FHE in applications.' },
+          { term: 'Zama Concrete', desc: 'Zama's open-source library and toolkit for working with FHE in applications.' },
           { term: 'Rand Hindi', desc: 'Co-founder & CEO of Zama. A serial entrepreneur who started coding at 10, founded his first company at 14, and later built Snips, an AI voice assistant startup acquired by Sonos. He holds a PhD in Bioinformatics from UCL and now leads Zama to make privacy-preserving FHE tech practical for everyone.' },
-          { term: 'Pascal Paillier', desc: 'Co-founder & CTO of Zama. A world-renowned cryptographer best known for inventing the Paillier Cryptosystem, one of the most famous homomorphic encryption schemes. With over 25 years in cryptography, numerous patents, and award-winning research, he’s shaping the future of encrypted computation at Zama.' }
+          { term: 'Pascal Paillier', desc: 'Co-founder & CTO of Zama. A world-renowned cryptographer best known for inventing the Paillier Cryptosystem, one of the most famous homomorphic encryption schemes. With over 25 years in cryptography, numerous patents, and award-winning research, he's shaping the future of encrypted computation at Zama.' }
         ];
 
         function ConfettiCelebration() {
@@ -311,24 +342,21 @@
               playSound('click');
               const certificateElement = certificateRef.current;
               if (certificateElement && window.html2canvas) {
-                  // Temporarily remove animation classes to ensure the element is fully visible before capture
                   const animationClass = 'animate-slideUpFadeIn';
                   const completionClass = 'completion-cert';
                   certificateElement.classList.remove(animationClass, completionClass);
 
                   html2canvas(certificateElement, {
-                      scale: 2, // Higher scale for better quality
-                      backgroundColor: "#ffffff", // Explicitly set background to white for the PNG
+                      scale: 2,
+                      backgroundColor: "#ffffff",
                   }).then(canvas => {
                       const link = document.createElement('a');
                       link.download = 'Zama-FHE-Certificate.png';
                       link.href = canvas.toDataURL('image/png');
                       link.click();
-                      // Add the animation classes back after the capture is done
                       certificateElement.classList.add(animationClass, completionClass);
                   }).catch(err => {
                       console.error("Failed to download certificate:", err);
-                      // Add classes back even if there is an error
                       certificateElement.classList.add(animationClass, completionClass);
                   });
               }
@@ -468,4 +496,3 @@
     </script>
 </body>
 </html>
-
